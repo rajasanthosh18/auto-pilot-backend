@@ -23,24 +23,6 @@ export class WaitlistService {
         };
       }
 
-      console.log(
-        "[WaitlistService] Checking for existing username:",
-        entry.username
-      );
-      const existingUsername = await this.waitlistDao.getByUsername(
-        entry.username
-      );
-      if (existingUsername) {
-        console.log(
-          "[WaitlistService] Username already exists:",
-          entry.username
-        );
-        return {
-          success: false,
-          message: "Username already taken",
-        };
-      }
-
       console.log("[WaitlistService] Creating new waitlist entry");
       const newEntry = await this.waitlistDao.create(entry);
       console.log(
