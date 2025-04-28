@@ -1,7 +1,7 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
-import waitlistRoutes from "./routes/waitlistRoutes";
+import { RouteLoader } from "./utils/routeLoader";
 
 dotenv.config();
 
@@ -12,11 +12,15 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use("/api/waitlist", waitlistRoutes);
-
-app.get("/health", (_req, res) => {
+// Health check endpoint
+app.get("/api/health", (_req, res) => {
   res.json({ status: "healthy" });
+});
+
+// Load all routes automatically
+RouteLoader.loadRoutes(app).catch((err) => {
+  console.error("Failed to load routes:", err);
+  process.exit(1);
 });
 
 app.listen(port, () => {
