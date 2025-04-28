@@ -1,0 +1,67 @@
+import { WaitlistDao } from "../dao/waitlistDao";
+import { WaitlistEntry, WaitlistResponse } from "../types/waitlist";
+
+export class WaitlistService {
+  private waitlistDao: WaitlistDao;
+
+  constructor() {
+    this.waitlistDao = new WaitlistDao();
+  }
+
+  async joinWaitlist(entry: WaitlistEntry): Promise<WaitlistResponse> {
+    try {
+      // Check if email already exists
+      const existingEmail = await this.waitlistDao.getByEmail(entry.email);
+      if (existingEmail) {
+        return {
+          success: false,
+          message: "Email already registered in waitlist",
+        };
+      }
+
+      // Check if username already exists
+      const existingUsername = await this.waitlistDao.getByUsername(
+        entry.username
+      );
+      if (existingUsername) {
+        return {
+          success: false,
+          message: "Username already taken",
+        };
+      }
+
+      // Create new entry
+      const newEntry = await this.waitlistDao.create(entry);
+      return {
+        success: true,
+        message: "Successfully joined waitlist",
+        data: newEntry || undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to join waitlist",
+      };
+    }
+  }
+
+  async getWaitlistEntries(): Promise<WaitlistResponse> {
+    try {
+      const entries = await this.waitlistDao.getAllEntries();
+      return {
+        success: true,
+        message: "Waitlist entries retrieved successfully",
+        data: entries[0],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to retrieve waitlist entries",
+      };
+    }
+  }
+}
