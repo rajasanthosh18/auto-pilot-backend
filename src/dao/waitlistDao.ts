@@ -53,8 +53,11 @@ export class WaitlistDao {
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("Error fetching waitlist entries: ", error);
       throw error;
     }
+
+    console.log("Fetched waitlist entries: ", data);
 
     return data || [];
   }
