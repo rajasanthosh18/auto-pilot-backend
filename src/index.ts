@@ -6,7 +6,8 @@ import { RouteLoader } from "./utils/routeLoader";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+// Render sets PORT env variable automatically
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -24,5 +25,5 @@ RouteLoader.loadRoutes(app).catch((err) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on port ${port}`);
 });
