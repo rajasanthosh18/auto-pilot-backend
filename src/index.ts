@@ -1,29 +1,39 @@
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
+import { logger } from "./common/logger";
 import { RouteLoader } from "./utils/routeLoader";
 
-dotenv.config();
-
 const app = express();
-// Render sets PORT env variable automatically
 const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "healthy" });
-});
-
-// Load all routes automatically
-RouteLoader.loadRoutes(app).catch((err) => {
-  console.error("Failed to load routes:", err);
+// Load routes
+RouteLoader.loadRoutes(app).catch((error) => {
+  logger.error("Failed to load routes: %O", error);
   process.exit(1);
 });
 
+app.get("/health", (_req, res) => {
+  logger.debug("Health check endpoint called");
+  res.json({ status: "healthy" });
+});
+
+// Start server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  logger.info("Server started successfully");
+  logger.info("Server is running on port %d", port);
+  logger.debug("Debug logging is enabled");
+});
+
+// Error handling
+process.on("unhandledRejection", (reason: any) => {
+  logger.error("Unhandled Promise Rejection: %O", reason);
+});
+
+process.on("uncaughtException", (error: Error) => {
+  logger.error("Uncaught Exception: %O", error);
+  process.exit(1);
 });
