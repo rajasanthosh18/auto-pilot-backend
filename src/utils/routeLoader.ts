@@ -8,12 +8,13 @@ export class RouteLoader {
     app: Express,
     basePath: string = "/api"
   ): Promise<void> {
-    const routesPath = path.join(__dirname, "../routes");
-    const routeFiles = fs.readdirSync(routesPath);
+    const featuresPath = path.join(__dirname, "../features");
+    const featureDirs = fs.readdirSync(featuresPath);
 
-    for (const file of routeFiles) {
-      if (file.endsWith("Routes.ts") || file.endsWith("Routes.js")) {
-        const routeModule = await import(path.join(routesPath, file));
+    for (const featureDir of featureDirs) {
+      const routePath = path.join(featuresPath, featureDir, "routes.ts");
+      if (fs.existsSync(routePath)) {
+        const routeModule = await import(routePath);
         const route: IRouter = routeModule.default;
         app.use(`${basePath}${route.path}`, route.router);
       }
