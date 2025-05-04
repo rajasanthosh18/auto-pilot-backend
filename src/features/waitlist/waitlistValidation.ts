@@ -6,13 +6,13 @@ const waitlistSchema = Joi.object({
     .required()
     .min(2)
     .max(30)
-    .pattern(/^[a-zA-Z0-9_]+$/)
+    .pattern(/^[a-zA-Z0-9_\s]+$/)
     .messages({
       "string.empty": "Username is required",
       "string.min": "Username must be at least 2 characters long",
       "string.max": "Username cannot exceed 30 characters",
       "string.pattern.base":
-        "Username can only contain letters, numbers and underscores",
+        "Username can only contain letters, numbers, underscores and spaces",
     }),
   email: Joi.string().required().email().messages({
     "string.empty": "Email is required",

@@ -40,6 +40,3 @@ class Logger {
 
 // Create logger instances for different components
 export const logger = new Logger("app");
-
-// Export the Logger class in case new instances are needed
-export { Logger };

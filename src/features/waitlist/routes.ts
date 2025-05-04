@@ -10,6 +10,6 @@ router.post("/join", validateWaitlistEntry, controller.joinWaitlist);
 router.get("/entries", controller.getWaitlistEntries);
 
 export default {
-  path: "/waitlist",
+  path: "/public/waitlist",
   router,
 } as IRouter;

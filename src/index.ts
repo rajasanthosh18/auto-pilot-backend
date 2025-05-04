@@ -1,3 +1,4 @@
+import { User } from "@supabase/supabase-js";
 import cors from "cors";
 import express from "express";
 import { Server } from "http";
@@ -12,11 +13,22 @@ let server: Server;
 // Middleware
 app.use(cors());
 app.use(express.json());
+declare module "express-serve-static-core" {
+  interface Request {
+    user: User;
+  }
+}
 
 // Health check endpoint
 app.get("/health", (_req, res) => {
   logger.debug("Health check endpoint called");
   res.json({ status: "healthy" });
+});
+
+// Log when API is entered
+app.use((req, _res, next) => {
+  logger.info(`API entered: ${req.method} ${req.path}`);
+  next();
 });
 
 // Verify database connection
