@@ -1,9 +1,9 @@
-import { User } from "@supabase/supabase-js";
 import cors from "cors";
 import express from "express";
 import { Server } from "http";
 import { logger } from "./common/logger";
 import { supabase } from "./config/supabase";
+import { ExtendedUser } from "./types/user";
 import { RouteLoader } from "./utils/routeLoader";
 
 const app = express();
@@ -11,11 +11,18 @@ const port = process.env.PORT || 3000;
 let server: Server;
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      /https:\/\/alive-vocal-pika.ngrok-free.app$/,
+      /http:\/\/localhost:3000$/,
+    ],
+  })
+);
 app.use(express.json());
 declare module "express-serve-static-core" {
   interface Request {
-    user: User;
+    user: ExtendedUser;
   }
 }
 
@@ -28,6 +35,16 @@ app.get("/health", (_req, res) => {
 // Log when API is entered
 app.use((req, _res, next) => {
   logger.info(`API entered: ${req.method} ${req.path}`);
+  next();
+});
+
+// Log responses
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  res.send = function (body) {
+    logger.response(`Response for ${req.method} ${req.path}: %O`, body);
+    return originalSend.call(this, body);
+  };
   next();
 });
 
