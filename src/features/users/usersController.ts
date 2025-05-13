@@ -11,18 +11,25 @@ export class UsersController {
 
   getAllUsers = async (_req: Request, res: Response): Promise<void> => {
     try {
-      logger.debug("Fetching all users");
+      logger.debug("usersController.ts: getAllUsers: Fetching all users");
       const result = await this.usersService.getAllUsers();
 
       if (result.success) {
-        logger.info("Successfully retrieved users");
+        logger.info(
+          "usersController.ts: getAllUsers: Successfully retrieved users"
+        );
       } else {
-        logger.warn("Failed to retrieve users: %s", result.message);
+        logger.warn(
+          "usersController.ts: getAllUsers: Failed to retrieve users",
+          { message: result.message }
+        );
       }
 
       res.status(result.success ? 200 : 400).json(result);
     } catch (error) {
-      logger.error("Error in getAllUsers: %O", error);
+      logger.error("usersController.ts: getAllUsers: Error retrieving users", {
+        error,
+      });
       res.status(500).json({
         success: false,
         message: "Internal server error",
@@ -32,7 +39,9 @@ export class UsersController {
 
   getCurrentUser = async (req: Request, res: Response): Promise<void> => {
     try {
-      logger.debug("Fetching current user details");
+      logger.debug(
+        "usersController.ts: getCurrentUser: Fetching current user details"
+      );
       const token = req.headers.authorization?.replace("Bearer ", "");
 
       if (!token) {
@@ -43,17 +52,25 @@ export class UsersController {
         return;
       }
 
-      const result = await this.usersService.getCurrentUser(token);
+      const result = await this.usersService.getCurrentUser(req.user);
 
       if (result.success) {
-        logger.info("Successfully retrieved current user");
+        logger.info(
+          "usersController.ts: getCurrentUser: Successfully retrieved current user"
+        );
       } else {
-        logger.warn("Failed to retrieve current user: %s", result.message);
+        logger.warn(
+          "usersController.ts: getCurrentUser: Failed to retrieve current user",
+          { message: result.message }
+        );
       }
 
       res.status(result.success ? 200 : 400).json(result);
     } catch (error) {
-      logger.error("Error in getCurrentUser: %O", error);
+      logger.error(
+        "usersController.ts: getCurrentUser: Error retrieving current user",
+        { error }
+      );
       res.status(500).json({
         success: false,
         message: "Internal server error",

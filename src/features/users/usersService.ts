@@ -1,4 +1,5 @@
 import { logger } from "../../common/logger";
+import { ExtendedUser } from "../../types/user";
 import { UsersDao } from "./usersDao";
 import { UserResponse } from "./usersTypes";
 
@@ -11,9 +12,12 @@ export class UsersService {
 
   async getAllUsers(): Promise<UserResponse> {
     try {
-      logger.debug("Retrieving all users");
+      logger.debug("usersService.ts: getAllUsers: Retrieving all users");
       const users = await this.usersDao.getAllUsers();
-      logger.info("Successfully retrieved %d users", users.length);
+      logger.info(
+        "usersService.ts: getAllUsers: Successfully retrieved users",
+        { count: users.length }
+      );
 
       return {
         success: true,
@@ -21,7 +25,9 @@ export class UsersService {
         data: users,
       };
     } catch (error) {
-      logger.error("Error in getAllUsers: %O", error);
+      logger.error("usersService.ts: getAllUsers: Error retrieving users", {
+        error,
+      });
       return {
         success: false,
         message:
@@ -30,10 +36,12 @@ export class UsersService {
     }
   }
 
-  async getCurrentUser(token: string) {
+  async getCurrentUser(user: ExtendedUser) {
     try {
-      logger.debug("Retrieving current user details");
-      const user = await this.usersDao.getCurrentUser(token);
+      logger.debug(
+        "usersService.ts: getCurrentUser: Retrieving current user details"
+      );
+      const channels = await this.usersDao.getCurrentUser(user.db_id);
 
       if (!user) {
         return {
@@ -42,14 +50,22 @@ export class UsersService {
         };
       }
 
-      logger.info("Successfully retrieved current user details");
+      logger.info(
+        "usersService.ts: getCurrentUser: Successfully retrieved current user details"
+      );
       return {
         success: true,
         message: "Current user retrieved successfully",
-        data: user,
+        data: {
+          ...user.user_metadata,
+          channels: channels,
+        },
       };
     } catch (error) {
-      logger.error("Error in getCurrentUser: %O", error);
+      logger.error(
+        "usersService.ts: getCurrentUser: Error retrieving current user",
+        { error }
+      );
       return {
         success: false,
         message:

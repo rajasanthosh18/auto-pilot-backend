@@ -5,7 +5,7 @@ import { config } from "../../config";
 interface TokenResponse {
   access_token: string;
   user_id: string;
-  permissions: string;
+  permissions: string[];
 }
 
 interface LongLivedTokenResponse {
@@ -59,26 +59,40 @@ export class InstagramService {
   async exchangeCodeForToken(code: string): Promise<TokenResponse> {
     try {
       if (!code) {
-        logger.error("No code provided for token exchange");
+        logger.error(
+          "instagram.service.ts: exchangeCodeForToken: No code provided for token exchange"
+        );
         throw new Error("Authorization code is required");
       }
 
-      logger.debug("Exchanging authorization code for access token");
-      const response = await axios.post<{ data: TokenResponse[] }>(
+      logger.debug(
+        "instagram.service.ts: exchangeCodeForToken: Exchanging authorization code for access token"
+      );
+      const response = await axios.post<TokenResponse>(
         "https://api.instagram.com/oauth/access_token",
-        {
+        new URLSearchParams({
           client_id: this.clientId,
           client_secret: this.clientSecret,
           grant_type: "authorization_code",
           redirect_uri: this.redirectUri,
           code,
+        }).toString(),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
         }
       );
 
-      logger.debug("response %O", response.data.data);
+      logger.debug(
+        "instagram.service.ts: exchangeCodeForToken: Token exchange response",
+        { data: response.data }
+      );
 
-      if (!response.data?.data?.[0]?.access_token) {
-        logger.error("Invalid response format from Instagram token exchange");
+      if (!response.data?.access_token) {
+        logger.error(
+          "instagram.service.ts: exchangeCodeForToken: Invalid response format from Instagram token exchange"
+        );
         throw new Error("Invalid response from Instagram API");
       }
 
@@ -89,35 +103,36 @@ export class InstagramService {
         "instagram_business_content_publish",
       ]);
 
-      const grantedPermissions = new Set(
-        response.data.data[0].permissions.split(",")
-      );
+      const grantedPermissions = new Set(response.data.permissions);
       const missingPermissions = [...requiredPermissions].filter(
         (permission) => !grantedPermissions.has(permission)
       );
 
       if (missingPermissions.length > 0) {
         logger.error(
-          "Missing required permissions: %s",
-          missingPermissions.join(", ")
+          "instagram.service.ts: exchangeCodeForToken: Missing required permissions",
+          { missingPermissions }
         );
         throw new Error(
           `Missing required permissions: ${missingPermissions.join(", ")}`
         );
       }
 
-      logger.debug("Successfully exchanged code for access token");
+      logger.debug(
+        "instagram.service.ts: exchangeCodeForToken: Successfully exchanged code for access token"
+      );
       return {
-        access_token: response.data.data[0].access_token,
-        user_id: response.data.data[0].user_id,
-        permissions: response.data.data[0].permissions,
+        access_token: response.data.access_token,
+        user_id: response.data.user_id,
+        permissions: response.data.permissions,
       };
     } catch (error: any) {
-      logger.error("Error exchanging code for token: %O", error);
+      logger.error(
+        "instagram.service.ts: exchangeCodeForToken: Error exchanging code for token",
+        { error }
+      );
       if (error.response?.data?.error_type === "OAuthException") {
-        throw new Error(
-          `Instagram OAuth Error: ${error.response.data.error_message}`
-        );
+        throw new Error(error.response.data.error_message);
       }
       throw error;
     }
@@ -127,7 +142,9 @@ export class InstagramService {
     shortLivedToken: string
   ): Promise<LongLivedTokenResponse> {
     try {
-      logger.debug("Exchanging short-lived token for long-lived token");
+      logger.debug(
+        "instagram.service.ts: getLongLivedToken: Exchanging short-lived token for long-lived token"
+      );
       const response = await axios.get(
         "https://graph.instagram.com/access_token",
         {
@@ -140,18 +157,25 @@ export class InstagramService {
       );
 
       if (!response.data?.access_token) {
-        logger.error("Invalid response format from Instagram token exchange");
+        logger.error(
+          "instagram.service.ts: getLongLivedToken: Invalid response format from Instagram token exchange"
+        );
         throw new Error("Invalid response from Instagram API");
       }
 
-      logger.debug("Successfully exchanged for long-lived token");
+      logger.debug(
+        "instagram.service.ts: getLongLivedToken: Successfully exchanged for long-lived token"
+      );
       return {
         access_token: response.data.access_token,
         token_type: response.data.token_type,
         expires_in: response.data.expires_in,
       };
     } catch (error: any) {
-      logger.error("Error exchanging for long-lived token: %O", error);
+      logger.error(
+        "instagram.service.ts: getLongLivedToken: Error exchanging for long-lived token",
+        { error }
+      );
       if (error.response?.data?.error) {
         throw new Error(
           `Instagram Token Exchange Error: ${error.response.data.error.message}`
@@ -167,7 +191,9 @@ export class InstagramService {
     expires_in: number;
   }> {
     try {
-      logger.debug("Refreshing long-lived token");
+      logger.debug(
+        "instagram.service.ts: refreshLongLivedToken: Refreshing long-lived token"
+      );
       const response = await axios.get(
         `https://graph.instagram.com/refresh_access_token`,
         {
@@ -179,18 +205,25 @@ export class InstagramService {
       );
 
       if (!response.data?.access_token) {
-        logger.error("Invalid response format from Instagram token refresh");
+        logger.error(
+          "instagram.service.ts: refreshLongLivedToken: Invalid response format from Instagram token refresh"
+        );
         throw new Error("Invalid response from Instagram API");
       }
 
-      logger.debug("Successfully refreshed long-lived token");
+      logger.debug(
+        "instagram.service.ts: refreshLongLivedToken: Successfully refreshed long-lived token"
+      );
       return {
         access_token: response.data.access_token,
         token_type: response.data.token_type,
         expires_in: response.data.expires_in,
       };
     } catch (error: any) {
-      logger.error("Error refreshing long-lived token: %O", error);
+      logger.error(
+        "instagram.service.ts: refreshLongLivedToken: Error refreshing long-lived token",
+        { error }
+      );
       if (error.response?.data?.error) {
         throw new Error(
           `Instagram Token Refresh Error: ${error.response.data.error.message}`
@@ -205,7 +238,10 @@ export class InstagramService {
     accessToken: string
   ): Promise<InstagramUserProfile> {
     try {
-      const response = await axios.get<{ data: InstagramUserProfile }>(
+      logger.debug(
+        "instagram.service.ts: getInstagramUserProfile: Fetching Instagram user profile"
+      );
+      const response = await axios.get<InstagramUserProfile>(
         `https://graph.instagram.com/${this.apiVersion}/me`,
         {
           params: {
@@ -216,9 +252,16 @@ export class InstagramService {
         }
       );
 
-      return response.data.data;
+      logger.debug(
+        "instagram.service.ts: getInstagramUserProfile: Profile fetch response",
+        { data: response.data }
+      );
+      return response.data;
     } catch (error) {
-      logger.error("Error fetching Instagram user profile: %O", error);
+      logger.error(
+        "instagram.service.ts: getInstagramUserProfile: Error fetching Instagram user profile",
+        { error }
+      );
       throw error;
     }
   }

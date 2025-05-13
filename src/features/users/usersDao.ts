@@ -1,3 +1,4 @@
+import { Channel } from "node:diagnostics_channel";
 import { logger } from "../../common/logger";
 import { supabase } from "../../config/supabase";
 import { User } from "./usersTypes";
@@ -6,7 +7,9 @@ export class UsersDao {
   private readonly tableName = "profiles";
 
   async getAllUsers(): Promise<User[]> {
-    logger.debug("Fetching all users from profiles table");
+    logger.debug(
+      "usersDao.ts: getAllUsers: Fetching all users from profiles table"
+    );
     try {
       const { data, error } = await supabase
         .from(this.tableName)
@@ -14,48 +17,49 @@ export class UsersDao {
         .order("updated_at", { ascending: false });
 
       if (error) {
-        logger.error("Failed to fetch users: %O", error);
+        logger.error("usersDao.ts: getAllUsers: Failed to fetch users", {
+          error,
+        });
         throw error;
       }
 
-      logger.info("Successfully retrieved %d users", data?.length || 0);
+      logger.info("usersDao.ts: getAllUsers: Successfully retrieved users", {
+        count: data?.length || 0,
+      });
       return data || [];
     } catch (error) {
-      logger.error("Error in getAllUsers: %O", error);
+      logger.error("usersDao.ts: getAllUsers: Error retrieving users", {
+        error,
+      });
       throw error;
     }
   }
 
-  async getCurrentUser(token: string) {
-    logger.debug("Fetching current user details");
+  async getCurrentUser(userId: string): Promise<Channel[]> {
+    logger.debug("usersDao.ts: getCurrentUser: Fetching current user details");
     try {
-      // First verify the token and get the user ID
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser(token);
+      const { data, error } = await supabase
+        .from("users")
+        .select("*, channels(*)")
+        .eq("id", userId);
 
-      if (authError || !user) {
-        logger.error("Failed to verify token: %O", authError);
-        throw authError || new Error("User not found");
+      if (error) {
+        logger.error(
+          "usersDao.ts: getCurrentUser: Failed to fetch user profile with channels",
+          { error }
+        );
+        throw error;
       }
 
-      // Then fetch the user's profile details
-      // const { data, error } = await supabase
-      //   .from(this.tableName)
-      //   .select("*")
-      //   .eq("id", user.id)
-      //   .single();
-
-      // if (error) {
-      //   logger.error("Failed to fetch user profile: %O", error);
-      //   throw error;
-      // }
-
-      logger.info("Successfully retrieved current user details");
-      return user.user_metadata;
+      logger.info(
+        "usersDao.ts: getCurrentUser: Successfully retrieved current user with channels"
+      );
+      return (data?.[0]?.channels as Channel[]) || [];
     } catch (error) {
-      logger.error("Error in getCurrentUser: %O", error);
+      logger.error(
+        "usersDao.ts: getCurrentUser: Error retrieving current user",
+        { error }
+      );
       throw error;
     }
   }
