@@ -7,5 +7,6 @@ export const config = {
     clientId: process.env.INSTAGRAM_CLIENT_ID!,
     clientSecret: process.env.INSTAGRAM_CLIENT_SECRET!,
     redirectUri: process.env.INSTAGRAM_REDIRECT_URI!,
+    webhookVerifyToken: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN!,
   },
 };
