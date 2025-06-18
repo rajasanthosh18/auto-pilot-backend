@@ -29,11 +29,31 @@ export type Waitlist = {
   created_at: Date; // timestamp with time zone
 };
 
+export type CommentDmAutomation = {
+  id: string;
+  channel_id: string;
+  post_id: string;
+
+  trigger_words: string[];
+  match_type: "any" | "all";
+  exclude_words?: string[];
+
+  opening_enabled: boolean;
+  opening_text?: string | null;
+
+  main_text: string;
+  buttons: { label: string; url: string }[];
+
+  created_at: Date;
+  updated_at: Date;
+};
+
 // Database schema type that includes all tables
 export type Database = {
   channels: Channel;
   users: User;
   waitlist: Waitlist;
+  comment_dm_automations: CommentDmAutomation;
 };
 
 // Type for inserting new records (omits auto-generated fields)
@@ -47,8 +67,13 @@ export type ChannelInsert = {
 };
 export type UserInsert = Omit<User, "id" | "created_at" | "updated_at">;
 export type WaitlistInsert = Omit<Waitlist, "id" | "created_at">;
+export type CommentDmAutomationInsert = Omit<
+  CommentDmAutomation,
+  "id" | "created_at" | "updated_at"
+>;
 
 // Type for updating records (makes all fields optional)
 export type ChannelUpdate = Partial<ChannelInsert>;
 export type UserUpdate = Partial<UserInsert>;
 export type WaitlistUpdate = Partial<WaitlistInsert>;
+export type CommentDmAutomationUpdate = Partial<CommentDmAutomationInsert>;

@@ -109,6 +109,33 @@ export class InstagramController {
         success: true,
         channel: channel,
       });
+
+      // Subscribe to webhook asynchronously (do not block response)
+      instagramService
+        .subscribePageToWebhook(
+          instagramProfile.id,
+          longLivedToken.access_token,
+          ["messages", "comments"]
+        )
+        .then((subscribed) => {
+          if (subscribed) {
+            logger.info(
+              "instagram.controller.ts: handleCallback: Successfully subscribed page to webhook",
+              { pageId: instagramProfile.id }
+            );
+          } else {
+            logger.error(
+              "instagram.controller.ts: handleCallback: Failed to subscribe page to webhook",
+              { pageId: instagramProfile.id }
+            );
+          }
+        })
+        .catch((error) => {
+          logger.error(
+            "instagram.controller.ts: handleCallback: Error subscribing page to webhook",
+            { pageId: instagramProfile.id, error }
+          );
+        });
     } catch (error) {
       logger.error(
         "instagram.controller.ts: handleCallback: Error handling Instagram callback",

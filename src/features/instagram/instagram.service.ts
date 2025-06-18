@@ -265,4 +265,106 @@ export class InstagramService {
       throw error;
     }
   }
+
+  /**
+   * Subscribe a Facebook Page to webhook events (messages, comments)
+   * @param pageId Facebook Page ID
+   * @param accessToken Page Access Token
+   * @param fields Array of fields to subscribe to (e.g., ['messages', 'comments'])
+   * @returns Promise<boolean> true if success, false otherwise
+   */
+  async subscribePageToWebhook(
+    pageId: string,
+    accessToken: string,
+    fields: string[]
+  ): Promise<boolean> {
+    const functionName = "subscribePageToWebhook";
+    try {
+      const apiVersion = "v23.0";
+      const url = `https://graph.facebook.com/${apiVersion}/${pageId}/subscribed_apps`;
+      const params = {
+        access_token: accessToken,
+        subscribed_fields: fields.join(","),
+      };
+      logger.info(
+        `instagram.service.ts: ${functionName}: Subscribing page to webhook`,
+        { pageId, fields }
+      );
+      const response = await axios.post(url, null, { params });
+      if (response.data && response.data.success) {
+        logger.info(
+          `instagram.service.ts: ${functionName}: Successfully subscribed page to webhook`,
+          { pageId, fields }
+        );
+        return true;
+      } else {
+        logger.error(
+          `instagram.service.ts: ${functionName}: Unexpected response subscribing page to webhook`,
+          { pageId, fields, response: response.data }
+        );
+        return false;
+      }
+    } catch (error: any) {
+      logger.error(
+        `instagram.service.ts: ${functionName}: Error subscribing page to webhook`,
+        {
+          pageId,
+          fields,
+          error: error?.response?.data || error?.message || error,
+        }
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Unsubscribe a Facebook Page from webhook events (messages, comments)
+   * @param pageId Facebook Page ID
+   * @param accessToken Page Access Token
+   * @param fields Array of fields to unsubscribe from (e.g., ['messages', 'comments'])
+   * @returns Promise<boolean> true if success, false otherwise
+   */
+  async unsubscribePageFromWebhook(
+    pageId: string,
+    accessToken: string,
+    fields: string[]
+  ): Promise<boolean> {
+    const functionName = "unsubscribePageFromWebhook";
+    try {
+      const apiVersion = "v23.0";
+      const url = `https://graph.facebook.com/${apiVersion}/${pageId}/subscribed_apps`;
+      const params = {
+        access_token: accessToken,
+        subscribed_fields: fields.join(","),
+      };
+      logger.info(
+        `instagram.service.ts: ${functionName}: Unsubscribing page from webhook`,
+        { pageId, fields }
+      );
+      const response = await axios.delete(url, { params });
+      if (response.data && response.data.success) {
+        logger.info(
+          `instagram.service.ts: ${functionName}: Successfully unsubscribed page from webhook`,
+          { pageId, fields }
+        );
+        return true;
+      } else {
+        logger.error(
+          `instagram.service.ts: ${functionName}: Unexpected response unsubscribing page from webhook`,
+          { pageId, fields, response: response.data }
+        );
+        return false;
+      }
+    } catch (error: any) {
+      logger.error(
+        `instagram.service.ts: ${functionName}: Error unsubscribing page from webhook`,
+        {
+          pageId,
+          fields,
+          error: error?.response?.data || error?.message || error,
+        }
+      );
+      return false;
+    }
+  }
 }
